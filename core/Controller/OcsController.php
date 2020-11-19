@@ -27,6 +27,9 @@ use OCP\IRequest;
 use OCP\IUserManager;
 use OCP\IUserSession;
 
+/**
+ * This class encapsulates all legacy OCS endpoints moved from lib/private/OCS
+ */
 class OcsController extends \OCP\AppFramework\OCSController {
 	public const SELECT_MULTIPLE_STMT = 'SELECT `key`, `app`, `value`  FROM `*PREFIX*privatedata` WHERE `user` = ? AND `app` = ? ';
 	public const SELECT_SINGLE_STMT = 'SELECT `key`, `app`, `value`  FROM `*PREFIX*privatedata` WHERE `user` = ? AND `app` = ? AND `key` = ? ';
