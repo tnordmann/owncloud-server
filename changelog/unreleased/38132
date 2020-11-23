@@ -1,0 +1,8 @@
+Bugfix: Exception for multiple default file actions
+
+The fix adds an exception when requesting a default file action for a
+file to which more than one default action applies. This is the case
+if your ownCloud uses both the PDF Viewer and the Collabora app, for example.
+
+https://github.com/owncloud/core/pull/38132
+https://github.com/owncloud/enterprise/issues/4261
