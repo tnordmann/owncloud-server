@@ -666,6 +666,15 @@
 						var type = this.fileActions.getCurrentType();
 						var permissions = this.fileActions.getCurrentPermissions();
 						var action = this.fileActions.getDefault(mime,type, permissions);
+						if (this.fileActions.getAmountOfDefaultActions(mime, type) > 1) {
+							OC.Notification.show(t('files', 'There are multiple default ' +
+								'actions available for this file type, which is not supported. ' +
+								'Please contact your administrator to resolve the problem and ' +
+								'select a desired action from the action dropdown on the right.'), {timeout : 10, type: 'error'});
+							event.preventDefault();
+							return;
+						}
+
 						if (action) {
 							event.preventDefault();
 							// also set on global object for legacy apps

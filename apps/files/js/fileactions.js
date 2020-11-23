@@ -186,7 +186,14 @@
 		 * @param {String} name action name
 		 */
 		setDefault: function (mime, name) {
-			this.defaults[mime] = name;
+			if (!(mime in this.defaults)) {
+				this.defaults[mime] = [];
+			}
+
+			if (this.defaults[mime].indexOf(name) < 0) {
+				this.defaults[mime].push(name);
+			}
+
 			this._notifyUpdateListeners('setDefault', {defaultAction: {mime: mime, name: name}});
 		},
 
@@ -265,7 +272,8 @@
 		},
 
 		/**
-		 * Returns the default file action handler for the given conditions
+		 * Returns the default file action handler for the given conditions.
+		 * If more than one default actions are found, we return undefined.
 		 *
 		 * @param {string} mime mime type
 		 * @param {string} type "dir" or "file"
@@ -275,22 +283,57 @@
 		 * @since 8.2
 		 */
 		getDefaultFileAction: function(mime, type, permissions) {
+			var defaultActions = this._getDefaultActions(mime, type);
+			var action = false;
+
+			if (defaultActions && defaultActions.length === 1) {
+				action = defaultActions[0];
+			}
+
+			var actions = this.getActions(mime, type, permissions);
+			return actions[action];
+		},
+
+		/**
+		 * Returns the amount of default actions for a given mime type.
+		 *
+		 * @param {string} mime mime type
+		 * @param {string} type "dir" or "file"
+		 *
+		 * @return {int} amount of default actions
+		 * @since 10.6
+		 */
+		getAmountOfDefaultActions: function(mime, type) {
+			var defaultActions = this._getDefaultActions(mime, type);
+			if (defaultActions) {
+				return defaultActions.length;
+			}
+			return 0;
+		},
+
+		/**
+		 * Returns all default actions for a given mime type.
+		 *
+		 * @param {string} mime mime type
+		 * @param {string} type "dir" or "file"
+		 *
+		 * @return {Array.<string>} actions
+		 */
+		_getDefaultActions: function(mime, type) {
 			var mimePart;
 			if (mime) {
 				mimePart = mime.substr(0, mime.indexOf('/'));
 			}
-			var name = false;
 			if (mime && this.defaults[mime]) {
-				name = this.defaults[mime];
-			} else if (mime && this.defaults[mimePart]) {
-				name = this.defaults[mimePart];
-			} else if (type && this.defaults[type]) {
-				name = this.defaults[type];
-			} else {
-				name = this.defaults.all;
+				return this.defaults[mime];
 			}
-			var actions = this.getActions(mime, type, permissions);
-			return actions[name];
+			if (mime && this.defaults[mimePart]) {
+				return this.defaults[mimePart];
+			}
+			if (type && this.defaults[type]) {
+				return this.defaults[type];
+			}
+			return this.defaults.all;
 		},
 
 		/**
