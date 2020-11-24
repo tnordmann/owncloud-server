@@ -666,11 +666,23 @@
 						var type = this.fileActions.getCurrentType();
 						var permissions = this.fileActions.getCurrentPermissions();
 						var action = this.fileActions.getDefault(mime,type, permissions);
-						if (this.fileActions.getAmountOfDefaultActions(mime, type) > 1) {
-							OC.Notification.show(t('files', 'There are multiple default ' +
-								'actions available for this file type, which is not supported. ' +
-								'Please contact your administrator to resolve the problem and ' +
-								'select a desired action from the action dropdown on the right.'), {timeout : 10, type: 'error'});
+						var actionsWithoutDefaults = this.fileActions.getActions(mime,type, permissions, true);
+						var context = {
+							$file: $tr,
+							fileList: this,
+							fileActions: this.fileActions,
+							dir: $tr.attr('data-path') || this.getCurrentDirectory()
+						};
+
+						if (Object.keys(actionsWithoutDefaults).length > 1) {
+							var appDrawer = new OCA.Files.FileActionsAppDrawer();
+							$(event.currentTarget).append(appDrawer.$el);
+
+							appDrawer.$el.on('afterHide', function() {
+								appDrawer.remove();
+							});
+							appDrawer.show(context);
+
 							event.preventDefault();
 							return;
 						}
@@ -679,12 +691,7 @@
 							event.preventDefault();
 							// also set on global object for legacy apps
 							window.FileActions.currentFile = this.fileActions.currentFile;
-							action(filename, {
-								$file: $tr,
-								fileList: this,
-								fileActions: this.fileActions,
-								dir: $tr.attr('data-path') || this.getCurrentDirectory()
-							});
+							action(filename, context);
 						}
 						// deselect row
 						$(event.target).closest('a').blur();

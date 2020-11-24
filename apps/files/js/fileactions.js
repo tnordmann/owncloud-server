@@ -186,14 +186,7 @@
 		 * @param {String} name action name
 		 */
 		setDefault: function (mime, name) {
-			if (!(mime in this.defaults)) {
-				this.defaults[mime] = [];
-			}
-
-			if (this.defaults[mime].indexOf(name) < 0) {
-				this.defaults[mime].push(name);
-			}
-
+			this.defaults[mime] = name;
 			this._notifyUpdateListeners('setDefault', {defaultAction: {mime: mime, name: name}});
 		},
 
@@ -221,12 +214,14 @@
 		 * @param {string} mime mime type
 		 * @param {string} type "dir" or "file"
 		 * @param {int} permissions permissions
+		 * @param {boolean} excludeDefaults excludeDefaults
 		 *
 		 * @return {Array.<OCA.Files.FileAction>} array of action specs
 		 */
-		getActions: function (mime, type, permissions) {
+		getActions: function (mime, type, permissions, excludeDefaults) {
 			var actions = {};
-			if (this.actions.all) {
+
+			if (this.actions.all && excludeDefaults !== true) {
 				actions = $.extend(actions, this.actions.all);
 			}
 			if (type) {//type is 'dir' or 'file'
@@ -273,7 +268,6 @@
 
 		/**
 		 * Returns the default file action handler for the given conditions.
-		 * If more than one default actions are found, we return undefined.
 		 *
 		 * @param {string} mime mime type
 		 * @param {string} type "dir" or "file"
@@ -283,57 +277,22 @@
 		 * @since 8.2
 		 */
 		getDefaultFileAction: function(mime, type, permissions) {
-			var defaultActions = this._getDefaultActions(mime, type);
-			var action = false;
-
-			if (defaultActions && defaultActions.length === 1) {
-				action = defaultActions[0];
-			}
-
-			var actions = this.getActions(mime, type, permissions);
-			return actions[action];
-		},
-
-		/**
-		 * Returns the amount of default actions for a given mime type.
-		 *
-		 * @param {string} mime mime type
-		 * @param {string} type "dir" or "file"
-		 *
-		 * @return {int} amount of default actions
-		 * @since 10.6
-		 */
-		getAmountOfDefaultActions: function(mime, type) {
-			var defaultActions = this._getDefaultActions(mime, type);
-			if (defaultActions) {
-				return defaultActions.length;
-			}
-			return 0;
-		},
-
-		/**
-		 * Returns all default actions for a given mime type.
-		 *
-		 * @param {string} mime mime type
-		 * @param {string} type "dir" or "file"
-		 *
-		 * @return {Array.<string>} actions
-		 */
-		_getDefaultActions: function(mime, type) {
 			var mimePart;
 			if (mime) {
 				mimePart = mime.substr(0, mime.indexOf('/'));
 			}
+			var name = false;
 			if (mime && this.defaults[mime]) {
-				return this.defaults[mime];
+				name = this.defaults[mime];
+			} else if (mime && this.defaults[mimePart]) {
+				name = this.defaults[mimePart];
+			} else if (type && this.defaults[type]) {
+				name = this.defaults[type];
+			} else {
+				name = this.defaults.all;
 			}
-			if (mime && this.defaults[mimePart]) {
-				return this.defaults[mimePart];
-			}
-			if (type && this.defaults[type]) {
-				return this.defaults[type];
-			}
-			return this.defaults.all;
+			var actions = this.getActions(mime, type, permissions);
+			return actions[name];
 		},
 
 		/**
@@ -394,7 +353,6 @@
 			$trigger.addClass('open');
 
 			menu = new OCA.Files.FileActionsMenu();
-
 			context.$file.find('td.filename').append(menu.$el);
 
 			menu.$el.on('afterHide', function() {
@@ -779,6 +737,7 @@
 	 * @property {Object} $file jQuery file row element
 	 * @property {OCA.Files.FileActions} fileActions file actions object
 	 * @property {OCA.Files.FileList} fileList file list object
+	 * @property {String} dir file dir
 	 */
 
 	/**
