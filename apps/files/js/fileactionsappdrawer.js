@@ -12,6 +12,7 @@
 
 	var TEMPLATE_MENU =
 		'<ul>' +
+		'<li>'+ t('files', 'How do you want to open this file?')+'</li>' +
 		'{{#each items}}' +
 		'<li>' +
 			'<a href="#" class="menuitem action action-{{nameLowerCase}} permanent" data-action="{{name}}">' +
@@ -36,7 +37,7 @@
 	 */
 	var FileActionsAppDrawer = OC.Backbone.View.extend({
 		tagName: 'div',
-		className: 'fileActionsAppDrawerMenu hidden',
+		className: 'fileActionsAppDrawer popovermenu bubble hidden open menu',
 
 		/**
 		 * Current context
@@ -50,10 +51,10 @@
 		},
 
 		template: function(data) {
-			if (!OCA.Files.FileActionsMenu._TEMPLATE) {
-				OCA.Files.FileActionsMenu._TEMPLATE = Handlebars.compile(TEMPLATE_MENU);
+			if (!OCA.Files.FileActionsAppDrawer._TEMPLATE) {
+				OCA.Files.FileActionsAppDrawer._TEMPLATE = Handlebars.compile(TEMPLATE_MENU);
 			}
-			return OCA.Files.FileActionsMenu._TEMPLATE(data);
+			return OCA.Files.FileActionsAppDrawer._TEMPLATE(data);
 		},
 
 		/**

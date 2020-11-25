@@ -992,10 +992,12 @@ html.ie8 #controls .button.new {
 	right: inherit;
 }
 
-#app-content-files .fileActionsAppDrawerMenu {
-	background: red;
-	height: 200px;
-	/* color: white; */
-	position: absolute;
-	z-index: 9001;
+.fileActionsAppDrawer.bubble{
+	right: initial;
+	left: 45px !important;
+}
+
+.fileActionsAppDrawer.bubble:after{
+	right: initial;
+	left: 15px !important;
 }

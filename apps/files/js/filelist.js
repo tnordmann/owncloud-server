@@ -675,7 +675,7 @@
 
 						if (Object.keys(actionsWithoutDefaults).length > 1) {
 							var appDrawer = new OCA.Files.FileActionsAppDrawer();
-							appDrawer.show(context, $(event.currentTarget));
+							appDrawer.show(context, $tr.find('td.filename'));
 							event.preventDefault();
 							return;
 						}
