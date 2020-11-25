@@ -80,7 +80,7 @@
 			event.preventDefault();
 
 			OC.hideMenus();
-			console.log(this._context);
+
 			actionSpec.action(
 				fileName,
 				this._context
@@ -89,13 +89,15 @@
 
 		render: function() {
 			var fileActions = this._context.fileActions;
-			var mime = fileActions.getCurrentMimeType();
-			var type = fileActions.getCurrentType();
-			var permissions = fileActions.getCurrentPermissions();
-			var actions = fileActions.getActions(mime,type, permissions, true);
+			var actions = fileActions.getActionsWithoutDefaults(
+				fileActions.getCurrentMimeType(),
+				fileActions.getCurrentType(),
+				fileActions.getCurrentPermissions()
+			);
+
 			var items = [];
 
-			Object.keys(actions).forEach(function (actionKey){
+			Object.keys(actions).forEach(function (actionKey) {
 				items.push(actions[actionKey]);
 			});
 
@@ -108,9 +110,15 @@
 		 * Displays the App Drawer menu.
 		 *
 		 * @param {OCA.Files.FileActionContext} context context
+		 * @param {jQuery} target target element to append menu
 		 */
-		show: function(context) {
+		show: function(context, target) {
 			this._context = context;
+
+			target.append(this.$el);
+			this.$el.on('afterHide', function() {
+				this.remove();
+			});
 
 			this.render();
 			this.$el.removeClass('hidden');

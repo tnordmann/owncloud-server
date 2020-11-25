@@ -110,9 +110,6 @@ describe('OCA.Files.FileActionsMenu tests', function() {
 			expect($action.find('img').length).toEqual(0);
 			expect($action.find('.no-icon').length).toEqual(1);
 		});
-		it('does not render default actions', function() {
-			expect(menu.$el.find('a[data-action=Testdefault]').length).toEqual(0);
-		});
 		it('does not render inline actions', function() {
 			expect(menu.$el.find('a[data-action=Testinline]').length).toEqual(0);
 		});

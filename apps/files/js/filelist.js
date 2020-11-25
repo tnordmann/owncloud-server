@@ -665,8 +665,7 @@
 						var mime = this.fileActions.getCurrentMimeType();
 						var type = this.fileActions.getCurrentType();
 						var permissions = this.fileActions.getCurrentPermissions();
-						var action = this.fileActions.getDefault(mime,type, permissions);
-						var actionsWithoutDefaults = this.fileActions.getActions(mime,type, permissions, true);
+						var actionsWithoutDefaults = this.fileActions.getActionsWithoutDefaults(mime,type, permissions);
 						var context = {
 							$file: $tr,
 							fileList: this,
@@ -676,17 +675,12 @@
 
 						if (Object.keys(actionsWithoutDefaults).length > 1) {
 							var appDrawer = new OCA.Files.FileActionsAppDrawer();
-							$(event.currentTarget).append(appDrawer.$el);
-
-							appDrawer.$el.on('afterHide', function() {
-								appDrawer.remove();
-							});
-							appDrawer.show(context);
-
+							appDrawer.show(context, $(event.currentTarget));
 							event.preventDefault();
 							return;
 						}
 
+						var action = this.fileActions.getDefault(mime,type, permissions);
 						if (action) {
 							event.preventDefault();
 							// also set on global object for legacy apps
