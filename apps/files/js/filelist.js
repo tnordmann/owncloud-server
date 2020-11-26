@@ -673,7 +673,7 @@
 							dir: $tr.attr('data-path') || this.getCurrentDirectory()
 						};
 
-						if (Object.keys(actionsWithoutDefaults).length > 1) {
+						if (Object.keys(actionsWithoutDefaults).length > 1 && type !== 'dir') {
 							var appDrawer = new OCA.Files.FileActionsAppDrawer();
 							appDrawer.show(context, $tr.find('td.filename'));
 							event.preventDefault();
