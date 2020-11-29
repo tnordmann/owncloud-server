@@ -14,6 +14,7 @@
  * @author Robin McCorkell <robin@mccorkell.me.uk>
  * @author Thomas Müller <thomas.mueller@tmit.eu>
  * @author Vincent Petry <pvince81@owncloud.com>
+ * @author Martin Mattel <github@diemattels.at>
  *
  * @copyright Copyright (c) 2017, ownCloud GmbH
  * @license AGPL-3.0
@@ -77,6 +78,7 @@ class Google extends \OCP\Files\Storage\StorageAdapter {
 			$this->service = new \Google_Service_Drive($this->client);
 			$token = \json_decode($params['token'], true);
 			$this->id = 'google::'.\substr($params['client_id'], 0, 30).$token['created'];
+			$this->root = isset($params['root']) ? $params['root'] : '';
 		} else {
 			throw new \Exception('Creating Google storage failed');
 		}
@@ -90,7 +92,7 @@ class Google extends \OCP\Files\Storage\StorageAdapter {
 	}
 
 	public function getId() {
-		return $this->id;
+		return $this->id.'/'.$this->root;
 	}
 
 	private function getDefaultFieldsForFile() {
@@ -122,12 +124,36 @@ class Google extends \OCP\Files\Storage\StorageAdapter {
 	}
 
 	/**
+	* Transform an external path to one originating from the virtual root.
+	* @param $path the path relative to the virtual root directory
+	* @return a path starting at the real root of Google Dirve
+	*/
+	private function getAbsolutePath($path) {
+		if ($path === '.') {
+			$path = '';
+		}
+		$path = $this->root !== '' ? $this->root.'/'.$path : $path;
+		$path = \trim($path, '/');
+		return $path;
+	}
+
+	/**
 	 * Get the Google_Service_Drive_DriveFile object for the specified path.
 	 * Returns false on failure.
 	 * @param string $path
 	 * @return \Google_Service_Drive_DriveFile|false
 	 */
 	private function getDriveFile($path) {
+		return $this->getDriveFileHelper($this->getAbsolutePath($path));
+	}
+
+	/**
+	 * Get the Google_Service_Drive_DriveFile object for the specified path.
+	 * Returns false on failure.
+	 * @param string $path
+	 * @return \Google_Service_Drive_DriveFile|false
+	 */
+	private function getDriveFileHelper($path) {
 		// Remove leading and trailing slashes
 		$path = \trim($path, '/');
 		if ($path === '.') {
@@ -144,7 +170,7 @@ class Google extends \OCP\Files\Storage\StorageAdapter {
 		} else {
 			// Google Drive SDK does not have methods for retrieving files by path
 			// Instead we must find the id of the parent folder of the file
-			$parentId = $this->getDriveFile('')->getId();
+			$parentId = $this->getDriveFileHelper('')->getId();
 			$folderNames = \explode('/', $path);
 			$path = '';
 			// Loop through each folder of this path to get to the file
@@ -179,7 +205,7 @@ class Google extends \OCP\Files\Storage\StorageAdapter {
 						$pos = \strrpos($path, '.');
 						if ($pos !== false) {
 							$pathWithoutExt = \substr($path, 0, $pos);
-							$file = $this->getDriveFile($pathWithoutExt);
+							$file = $this->getDriveFileHelper($pathWithoutExt);
 							if ($file && $this->isGoogleDocFile($file)) {
 								// Switch cached Google_Service_Drive_DriveFile to the correct index
 								unset($this->driveFiles[$pathWithoutExt]);
@@ -204,6 +230,15 @@ class Google extends \OCP\Files\Storage\StorageAdapter {
 	 * @param \Google_Service_Drive_DriveFile|false $file
 	 */
 	private function setDriveFile($path, $file) {
+		return $this->setDriveFileHelper($this->getAbsolutePath($path), $file);
+	}
+
+	/**
+	 * Set the Google_Service_Drive_DriveFile object in the cache
+	 * @param string $path
+	 * @param \Google_Service_Drive_DriveFile|false $file
+	 */
+	private function setDriveFileHelper($path, $file) {
 		$path = \trim($path, '/');
 		$this->driveFiles[$path] = $file;
 		if ($file === false) {
@@ -381,7 +416,7 @@ class Google extends \OCP\Files\Storage\StorageAdapter {
 	}
 
 	public function filetype($path) {
-		if ($path === '') {
+		if ($this->getAbsolutePath($path) === '') {
 			return 'dir';
 		} else {
 			$file = $this->getDriveFile($path);
@@ -474,6 +509,7 @@ class Google extends \OCP\Files\Storage\StorageAdapter {
 	}
 
 	public function fopen($path, $mode) {
+		//$path = $this->getAbsolutePath($path);
 		$pos = \strrpos($path, '.');
 		if ($pos !== false) {
 			$ext = \substr($path, $pos);
